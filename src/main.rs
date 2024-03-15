@@ -11,9 +11,12 @@ use rustOS::println;
 pub extern "C" fn _start() -> ! {
     println!("hello world{}", "!");
     
+    rustOS::init();
+
     #[cfg(test)]
     test_main();
     
+    println!("it did not crash");
     loop {
 
     }
