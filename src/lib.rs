@@ -8,11 +8,13 @@
 pub mod serial;
 pub mod vga_buffer;
 pub mod interrupt;
+pub mod gdt;
 
 use core::panic::PanicInfo;
 
 pub fn init() {
     interrupt::init();
+    gdt::init();
 }
 
 pub fn test_runner(tests: &[&dyn Fn()]) {
@@ -34,6 +36,7 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
 #[cfg(test)]
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
+    init();
     test_main();
     loop {}
 }
@@ -43,9 +46,6 @@ pub extern "C" fn _start() -> ! {
 fn panic(info: &PanicInfo) -> ! {
     test_panic_handler(info)
 }
-
-
-// in src/lib.rs
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
