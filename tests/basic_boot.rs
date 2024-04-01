@@ -12,7 +12,7 @@ use rustOS::{println, serial_print, serial_println};
 pub extern "C" fn _start() -> ! {
     test_main();
 
-    loop {}
+    rustOS::hlt_loop();
 }
 
 #[panic_handler]

@@ -149,8 +149,6 @@ macro_rules! print {
 
 #[macro_export]
 macro_rules! println {
-
-    
     () => ($crate::print!("\n"));
     ($($arg:tt)*) => ($crate::print!("{}\n",format_args!($($arg)*)));
 }
@@ -158,7 +156,10 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args : fmt::Arguments) {
     // use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    use x86_64::instructions::interrupts;
+    interrupts::without_interrupts(|| {
+        WRITER.lock().write_fmt(args).unwrap();
+    });
 }
 
 #[test_case]
@@ -175,11 +176,15 @@ fn test_println_output() {
     serial_print!("test_println_output... ");
 
     let s = "Some test string that fits on a single line";
-    println!("{}", s);
-    for (i, c) in s.chars().enumerate() {
-        let screen_char = WRITER.lock().vga_buffer.chars[VGA_BUFFER_HEIGHT - 2][i].read();
-        assert_eq!(char::from(screen_char.ascii_code), c);
-    }
+    use x86_64::instructions::interrupts;
+    let mut writer = WRITER.lock();
+    writeln!(writer, "\n{}", s).expect("write failed");
+    interrupt::without_interrupts(|| {    
+        for (i, c) in s.chars().enumerate() {
+            let screen_char = WRITER.lock().vga_buffer.chars[VGA_BUFFER_HEIGHT - 2][i].read();
+            assert_eq!(char::from(screen_char.ascii_code), c);
+        }
+    });
 
     serial_println!("[ok]");
 }

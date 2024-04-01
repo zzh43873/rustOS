@@ -9,12 +9,21 @@ pub mod serial;
 pub mod vga_buffer;
 pub mod interrupt;
 pub mod gdt;
+pub mod memory;
 
 use core::panic::PanicInfo;
+
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
+}
 
 pub fn init() {
     interrupt::init();
     gdt::init();
+    unsafe {interrupt::PICS.lock().initialize()};
+    x86_64::instructions::interrupts::enable();
 }
 
 pub fn test_runner(tests: &[&dyn Fn()]) {
@@ -29,16 +38,19 @@ pub fn test_panic_handler(info: &PanicInfo) -> ! {
     serial_println!("[failed]\n");
     serial_println!("Error: {}\n", info);
     exit_qemu(QemuExitCode::Failed);
-    loop {}
+    hlt_loop()
 }
 
 /// Entry point for `cargo xtest`
 #[cfg(test)]
-#[no_mangle]
-pub extern "C" fn _start() -> ! {
+use bootloader::{entry_point, BootInfo};
+#[cfg(test)]
+entry_point!(test_kernel_main);
+#[cfg(test)]
+pub fn test_kernel_main(_info : &'static BootInfo) -> ! {
     init();
     test_main();
-    loop {}
+    hlt_loop()
 }
 
 #[cfg(test)]
