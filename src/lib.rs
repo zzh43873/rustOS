@@ -10,8 +10,20 @@ pub mod vga_buffer;
 pub mod interrupt;
 pub mod gdt;
 pub mod memory;
+pub mod allocator;
 
 use core::panic::PanicInfo;
+use linked_list_allocator::LockedHeap;
+
+#[global_allocator]
+static ALLOCATOR: LockedHeap = LockedHeap::empty();
+
+#[panic_handler]
+#[cfg(not(test))]
+fn panic(_info : &PanicInfo) -> ! {
+    println!("{}", _info);
+    hlt_loop()
+}
 
 pub fn hlt_loop() -> ! {
     loop {
