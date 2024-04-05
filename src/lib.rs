@@ -11,6 +11,7 @@ pub mod interrupt;
 pub mod gdt;
 pub mod memory;
 pub mod allocator;
+pub mod task;
 
 use core::panic::PanicInfo;
 use linked_list_allocator::LockedHeap;
